@@ -1,0 +1,1 @@
+-- Supabase schema placeholder. Re-import migrations or connect to your project schema here.

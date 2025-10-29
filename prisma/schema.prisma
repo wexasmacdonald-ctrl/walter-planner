@@ -1,0 +1,98 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Client {
+  id          String   @id @default(cuid())
+  addressLine String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  routeStops RouteStop[]
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String?  @unique
+  role      String   @default("ADMIN")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  routes        Route[]          @relation("RouteDriver")
+  reviews       RouteReviewer[]
+  supervisorFor UserSupervisor[] @relation("SupervisorRelation")
+  drivers       UserSupervisor[] @relation("DriverRelation")
+  assignments   EmployeeAssignment[]
+}
+
+model Route {
+  id          String   @id @default(cuid())
+  name        String
+  status      String   @default("DRAFT")
+  serviceDate DateTime?
+  notes       String?
+  driverId    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  driver    User?           @relation("RouteDriver", fields: [driverId], references: [id])
+  stops     RouteStop[]
+  reviewers RouteReviewer[]
+}
+
+model RouteStop {
+  id        String  @id @default(cuid())
+  routeId   String
+  clientId  String
+  sequence  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  route  Route  @relation(fields: [routeId], references: [id])
+  client Client @relation(fields: [clientId], references: [id])
+
+  @@unique([routeId, clientId])
+  @@unique([routeId, sequence])
+}
+
+model RouteReviewer {
+  id          String   @id @default(cuid())
+  routeId     String
+  reviewerId  String
+  createdAt   DateTime @default(now())
+
+  route    Route @relation(fields: [routeId], references: [id])
+  reviewer User  @relation(fields: [reviewerId], references: [id])
+
+  @@unique([routeId, reviewerId])
+}
+
+model UserSupervisor {
+  id            String   @id @default(cuid())
+  supervisorId  String
+  driverId      String
+  createdAt     DateTime @default(now())
+
+  supervisor User @relation("SupervisorRelation", fields: [supervisorId], references: [id])
+  driver     User @relation("DriverRelation", fields: [driverId], references: [id])
+
+  @@unique([supervisorId, driverId])
+}
+
+model EmployeeAssignment {
+  id          String   @id @default(cuid())
+  userId      String
+  addressLine String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+}
