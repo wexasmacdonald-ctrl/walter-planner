@@ -6,13 +6,11 @@ const ROLES = ['ADMIN', 'DEVELOPER', 'DRIVER'] as const;
 
 const UserUpdateSchema = z.object({
   name: z.string().trim().min(1, 'Name is required').optional(),
-  email: z
+  pin: z
     .string()
     .trim()
-    .email('Invalid email')
-    .optional()
-    .or(z.literal(''))
-    .transform((value) => (value ? value : undefined)),
+    .regex(/^\d{4}$/, 'PIN must be exactly 4 numbers')
+    .optional(),
   role: z.enum(ROLES).optional(),
 });
 
@@ -39,13 +37,9 @@ export async function PUT(request: Request, context: RouteContext) {
         { status: 400 }
       );
     }
-    if (
-      error instanceof Error &&
-      'code' in error &&
-      (error as { code: string }).code === 'P2002'
-    ) {
+    if (error instanceof Error && 'code' in error && (error as { code: string }).code === 'P2002') {
       return NextResponse.json(
-        { message: 'Email already exists' },
+        { message: 'A user already exists with those details.' },
         { status: 409 }
       );
     }
