@@ -14,7 +14,7 @@ export const dynamic = 'force-dynamic';
 export default async function AdminDriverDetailPage({ params }: DriverPageProps) {
   const user = await prisma.user.findUnique({
     where: { id: params.userId },
-    select: { id: true, name: true, email: true, role: true },
+    select: { id: true, name: true, role: true, pin: true },
   });
 
   if (!user || user.role !== 'DRIVER') {
@@ -36,7 +36,7 @@ export default async function AdminDriverDetailPage({ params }: DriverPageProps)
         >
           Back to drivers
         </Link>
-        {user.email && <span className="text-sm text-sky-700">{user.email}</span>}
+        <span className="text-sm font-medium text-sky-900">PIN: {user.pin}</span>
       </div>
 
       <header className="space-y-2">

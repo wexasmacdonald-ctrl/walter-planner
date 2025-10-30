@@ -6,13 +6,10 @@ const ROLES = ['ADMIN', 'DEVELOPER', 'DRIVER'] as const;
 
 const UserPayloadSchema = z.object({
   name: z.string().trim().min(1, 'Name is required'),
-  email: z
+  pin: z
     .string()
     .trim()
-    .email('Invalid email')
-    .optional()
-    .or(z.literal(''))
-    .transform((value) => (value ? value : undefined)),
+    .regex(/^\d{4}$/, 'PIN must be exactly 4 numbers'),
   role: z.enum(ROLES),
 });
 
@@ -31,7 +28,7 @@ export async function POST(request: Request) {
     const created = await prisma.user.create({
       data: {
         name: parsed.name,
-        email: parsed.email,
+        pin: parsed.pin,
         role: parsed.role,
       },
     });
@@ -44,13 +41,9 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
-    if (
-      error instanceof Error &&
-      'code' in error &&
-      (error as { code: string }).code === 'P2002'
-    ) {
+    if (error instanceof Error && 'code' in error && (error as { code: string }).code === 'P2002') {
       return NextResponse.json(
-        { message: 'Email already exists' },
+        { message: 'A user already exists with those details.' },
         { status: 409 }
       );
     }
